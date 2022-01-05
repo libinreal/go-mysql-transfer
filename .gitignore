@@ -1,0 +1,5 @@
+*.sublime-project
+*.sublime-workspace
+store/db/*
+store/log/*
+!.gitignore
