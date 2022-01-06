@@ -23,6 +23,7 @@ import (
 	"strings"
 	"sync"
 	"text/template"
+	"strconv"
 
 	"github.com/juju/errors"
 	"github.com/siddontang/go-mysql/schema"
@@ -77,6 +78,8 @@ type Rule struct {
 	ValueFormatter    string `yaml:"value_formatter"`    //格式化定义key,{id}表示字段id的值、{name}表示字段name的值
 	LuaScript         string `yaml:"lua_script"`         //lua 脚本
 	LuaFilePath       string `yaml:"lua_file_path"`      //lua 文件地址
+	LuaDataFields     string `yaml:"lua_data_fields"`      //lua 额外保存的字段
+	LuaDataFieldsType string `yaml:"lua_data_fields_type"` //lua 额外保存的字段类型
 	DateFormatter     string `yaml:"date_formatter"`     //date类型格式化， 不填写默认2006-01-02
 	DatetimeFormatter string `yaml:"datetime_formatter"` //datetime、timestamp类型格式化，不填写默认RFC3339(2006-01-02T15:04:05Z07:00)
 
@@ -130,6 +133,7 @@ type Rule struct {
 	LuaProto              *lua.FunctionProto
 	LuaFunction           *lua.LFunction
 	ValueTmpl             *template.Template
+	LuaPaddingMap 		  map[string]*model.Padding
 }
 
 func RuleDeepClone(res *Rule) (*Rule, error) {
@@ -346,6 +350,8 @@ func (s *Rule) buildPaddingMap() error {
 	paddingMap := make(map[string]*model.Padding)
 	mappings := make(map[string]string)
 
+	luaPaddingMap := make(map[string]*model.Padding)
+
 	if s.ColumnMappingConfigs != "" {
 		ls := strings.Split(s.ColumnMappingConfigs, ",")
 		for _, t := range ls {
@@ -403,6 +409,40 @@ func (s *Rule) buildPaddingMap() error {
 
 	s.PaddingMap = paddingMap
 
+	//lua padding map init
+	if s.LuaDataFields != "" {
+		luaDataField := strings.Split(s.LuaDataFields, ",")
+	}
+	if s.LuaDataFieldsType != "" {
+		luaDataFieldsType := strings.Split(s.LuaDataFieldsType, ",")
+	}
+	
+	if len(luaDataField) > 0 {
+		for i, c := range luaDataField {
+			t, err := strconv.Atoi(luaDataFieldsType[i])
+			var column *schema.TableColumn
+			if nil == err {
+				switch t {
+				case schema.TYPE_NUMBER 
+					column = &schema.TableColumn{
+						Type: schema.TYPE_NUMBER
+					}
+				//TODO other lua data field type cases using schema types
+				default:
+					return errors.Errorf("lua_data_fields_type format current only 1 supported")	
+				}
+			} else {
+				return errors.Errorf("lua_data_fields_type format error only 1-5 supported")
+			}
+			luaPaddingMap[c] = &model.Padding{
+				ColumnMetadata: column,
+				ColumnName:     c,
+				ColumnType:     t,
+			}
+		}
+	}
+	s.LuaPaddingMap = luaPaddingMap
+	
 	return nil
 }
 
@@ -422,6 +462,13 @@ func (s *Rule) newPadding(mappings map[string]string, columnName string) *model.
 		ColumnName:     column.Name,
 		ColumnType:     column.Type,
 		ColumnMetadata: column,
+	}
+}
+
+func (s *Rule) newLuaPadding(mappings map[string]string, columnName string) *model.Padding {
+	return &model.Padding{
+		ColumnName:     column.Name,
+		ColumnType:     column.Type,
 	}
 }
 

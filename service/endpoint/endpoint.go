@@ -218,6 +218,138 @@ func convertColumnData(value interface{}, col *schema.TableColumn, rule *global.
 	return value
 }
 
+//only convert number to int before number field value saved into mongo
+func convertNumberColumnData(value interface{}, col *schema.TableColumn, rule *global.Rule) interface{} {
+	if value == nil {
+		return nil
+	}
+
+	switch col.Type {
+	case schema.TYPE_ENUM:
+		switch value := value.(type) {
+		case int64, float64:
+			eNum := int64(value) - 1
+			if eNum < 0 || eNum >= int64(len(col.EnumValues)) {
+				// we insert invalid enum value before, so return empty
+				logs.Warnf("invalid binlog enum index %d, for enum %v", eNum, col.EnumValues)
+				return ""
+			}
+			return col.EnumValues[eNum]
+		case string:
+			return value
+		case []byte:
+			return string(value)
+		}
+	case schema.TYPE_SET:
+		switch value := value.(type) {
+		case int64:
+			bitmask := value
+			sets := make([]string, 0, len(col.SetValues))
+			for i, s := range col.SetValues {
+				if bitmask&int64(1<<uint(i)) > 0 {
+					sets = append(sets, s)
+				}
+			}
+			return strings.Join(sets, ",")
+		}
+	case schema.TYPE_BIT:
+		switch value := value.(type) {
+		case string, float64:
+			if value == "\x01" {
+				return int64(1)
+			}
+			return int64(0)
+		}
+	case schema.TYPE_STRING:
+		switch value := value.(type) {
+		case []byte:
+			return string(value[:])
+		}
+	case schema.TYPE_JSON:
+		var f interface{}
+		var err error
+		switch v := value.(type) {
+		case string:
+			err = json.Unmarshal([]byte(v), &f)
+		case []byte:
+			err = json.Unmarshal(v, &f)
+		}
+		if err == nil && f != nil {
+			return f
+		}
+	case schema.TYPE_DATETIME, schema.TYPE_TIMESTAMP:
+		var vv string
+		switch v := value.(type) {
+		case string:
+			vv = v
+		case []byte:
+			vv = string(v)
+		}
+		if rule.DatetimeFormatter != "" {
+			vt, err := time.Parse(mysql.TimeFormat, vv)
+			if err != nil || vt.IsZero() { // failed to parse date or zero date
+				return nil
+			}
+			return vt.Format(rule.DatetimeFormatter)
+		}
+		return vv
+	case schema.TYPE_DATE:
+		var vv string
+		switch v := value.(type) {
+		case string:
+			vv = v
+		case []byte:
+			vv = string(v)
+		}
+		if rule.DateFormatter != "" {
+			vt, err := time.Parse(defaultDateFormatter, vv)
+			if err != nil || vt.IsZero() { // failed to parse date or zero date
+				return nil
+			}
+			return vt.Format(rule.DateFormatter)
+		}
+		return vv
+	case schema.TYPE_NUMBER:
+		switch v := value.(type) {
+		case string, float64:
+			vv, err := strconv.ParseInt(v, 10, 64)
+			if err != nil {
+				logs.Error(err.Error())
+				return nil
+			}
+			return vv
+		case []byte:
+			str := string(v)
+			vv, err := strconv.ParseInt(str, 10, 64)
+			if err != nil {
+				logs.Error(err.Error())
+				return nil
+			}
+			return vv
+		}
+	case schema.TYPE_DECIMAL, schema.TYPE_FLOAT:
+		switch v := value.(type) {
+		case string:
+			vv, err := strconv.ParseFloat(v, 64)
+			if err != nil {
+				logs.Error(err.Error())
+				return nil
+			}
+			return vv
+		case []byte:
+			str := string(v)
+			vv, err := strconv.ParseFloat(str, 64)
+			if err != nil {
+				logs.Error(err.Error())
+				return nil
+			}
+			return vv
+		}
+	}
+
+	return value
+}
+
 func encodeValue(rule *global.Rule, kv map[string]interface{}) string {
 	if rule.ValueTmpl != nil {
 		var tmplBytes bytes.Buffer
@@ -279,6 +411,25 @@ func rowMap(req *model.RowRequest, rule *global.Rule, primitive bool) map[string
 		}
 	}
 	return kv
+}
+
+//recover to int type from float before number field value saved into mongo
+func recoverInt(ls []*model.MongoRespond, rule *global.Rule) map[string]interface{} {
+	kv := make(map[string]interface{}, len(ls))
+	for _, resp := range ls {
+		var table := resp.Table
+		for k, v := range resp.Table {
+			padding, ok := rule.PaddingMap[k]
+			if ok {
+				table[k] = convertNumberColumnData(v, padding.ColumnMetadata, rule)
+			}
+			padding, ok = rule.LuaPaddingMap[k]
+			if ok {
+				table[k] = convertNumberColumnData(v, padding.ColumnMetadata, rule)
+			}
+		}
+		resp.Table = table
+	}
 }
 
 func oldRowMap(req *model.RowRequest, rule *global.Rule, primitive bool) map[string]interface{} {

@@ -139,6 +139,7 @@ func (s *MongoEndpoint) Consume(from mysql.Position, rows []*model.RowRequest) e
 			if err != nil {
 				return errors.Errorf("lua 脚本执行失败 : %s ", errors.ErrorStack(err))
 			}
+			recoverInt(ls, rule)
 			for _, resp := range ls {
 				var model mongo.WriteModel
 				switch resp.Action {
@@ -150,6 +151,8 @@ func (s *MongoEndpoint) Consume(from mysql.Position, rows []*model.RowRequest) e
 					model = mongo.NewUpdateOneModel().SetFilter(bson.M{"_id": resp.Id}).SetUpsert(true).SetUpdate(bson.M{"$set": resp.Table})
 				case canal.DeleteAction:
 					model = mongo.NewDeleteOneModel().SetFilter(bson.M{"_id": resp.Id})
+				case luaengine.MongoEInsertAction:
+					model = mongo.NewInsertOneModel().SetDocument(resp.Table)
 				}
 
 				key := s.collectionKey(rule.MongodbDatabase, resp.Collection)

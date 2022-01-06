@@ -22,9 +22,14 @@ import (
 	"github.com/siddontang/go-mysql/canal"
 	"github.com/yuin/gopher-lua"
 
+	"go-mysql-transfer/util/logs"
 	"go-mysql-transfer/global"
 	"go-mysql-transfer/model"
 	"go-mysql-transfer/util/stringutil"
+)
+
+const (
+	MongoEInsertAction = "EINSERT"
 )
 
 func mongoModule(L *lua.LState) int {
@@ -42,6 +47,7 @@ var _mongoModuleApi = map[string]lua.LGFunction{
 	"UPDATE": mongoUpdate,
 	"DELETE": mongoDelete,
 	"UPSERT": mongoUpsert,
+	"EINSERT": mongoEInsert,
 }
 
 func mongoInsert(L *lua.LState) int {
@@ -49,6 +55,21 @@ func mongoInsert(L *lua.LState) int {
 	table := L.CheckAny(2)
 
 	data := L.NewTable()
+	L.SetTable(data, lua.LString("collection"), collection)
+	L.SetTable(data, lua.LString("action"), lua.LString(canal.InsertAction))
+	L.SetTable(data, lua.LString("table"), table)
+
+	ret := L.GetGlobal(_globalRET)
+	L.SetTable(ret, lua.LString(stringutil.UUID()), data)
+	return 0
+}
+
+func mongoEInsert(L *lua.LState) int {
+	collection := L.CheckAny(1)
+	table := L.CheckAny(2)
+
+	data := L.NewTable()
+	logs.Infof("mongo EInsert %s %s", collection, table.String())
 	L.SetTable(data, lua.LString("collection"), collection)
 	L.SetTable(data, lua.LString("action"), lua.LString(canal.InsertAction))
 	L.SetTable(data, lua.LString("table"), table)

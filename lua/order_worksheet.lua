@@ -119,13 +119,16 @@ end
 
 -- os.exit()
 -- local ow_id = string_to_num(row["ow_id"]) --获取ID列的值
--- result["_id"] = ow_id -- _id为MongoDB的主键标识
+result["_id"] = ow_id -- _id为MongoDB的主键标识
 
 -- if action == "insert" then -- 新增事件
---     ops.INSERT("order_worksheet",result) -- 新增，第一个参数为collection名称，string类型；第二个参数为要修改的数据，talbe类型
--- elseif action == "delete" then -- 删除事件  -- 修改事件
---     ops.DELETE("order_worksheet",ow_id) -- 删除，第一个参数为collection名称(string类型)，第二个参数为ID 
--- else -- 修改事件
---    -- ops.UPDATE("order_worksheet",ow_id,result) -- 修改，第一个参数为collection名称，string类型；第二个参数为ID；第三个参数为要修改的数据，talbe类型
---    ops.UPSERT("order_worksheet",ow_id,result) -- 修改或新增，第一个参数为collection名称，string类型；第二个参数为ID；第三个参数为要修改的数据，talbe类型
+--    ops.EINSERT("order_worksheet",result) -- 新增，第一个参数为collection名称，string类型；第二个参数为要修改的数据，talbe类型
 -- end
+if action == "insert" then -- 新增事件
+    ops.INSERT("order_worksheet",result) -- 新增，第一个参数为collection名称，string类型；第二个参数为要修改的数据，talbe类型
+elseif action == "delete" then -- 删除事件  -- 修改事件
+    ops.DELETE("order_worksheet",ow_id) -- 删除，第一个参数为collection名称(string类型)，第二个参数为ID 
+else -- 修改事件
+   -- ops.UPDATE("order_worksheet",ow_id,result) -- 修改，第一个参数为collection名称，string类型；第二个参数为ID；第三个参数为要修改的数据，talbe类型
+   ops.UPSERT("order_worksheet",ow_id,result) -- 修改或新增，第一个参数为collection名称，string类型；第二个参数为ID；第三个参数为要修改的数据，talbe类型
+end
