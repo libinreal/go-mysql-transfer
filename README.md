@@ -2,7 +2,7 @@
 
 # 简介
 
-Fork 自 [go-mysql-transfer](https://github.com/wj596/go-mysql-transfer) Tag 1.0.4
+Fork 自 [go-mysql-transfer](https://github.com/wj596/go-mysql-transfer) Tag 1.0.5
 
 # 感谢
 
@@ -12,5 +12,5 @@ Fork 自 [go-mysql-transfer](https://github.com/wj596/go-mysql-transfer) Tag 1.0
 
 
 # 更新日志
-**基于v1.0.4 release**
+**基于v1.0.5 release**
 * 2022-01-07 修复了 Lua 保存MySQL的`Int`类型 到 MongoDB 为 `Double` 的Bug
