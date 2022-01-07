@@ -2,4 +2,5 @@
 *.sublime-workspace
 store/db/*
 store/log/*
+__debug_bin
 !.gitignore
