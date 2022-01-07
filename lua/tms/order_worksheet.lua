@@ -81,13 +81,14 @@ function writefile(path, content, mode)
       end
 end
 
-local ops = require("mongodbOps")
+local ops = require("mongodbOps") --加载mongo数据库操作模块
+local db = require("dbOps")   --加载数据库操作模块
 local json = require("json")   -- 加载json模块
 local row = ops.rawRow()
 local action = ops.rawAction()
 
 local log_file = "store/log/my.ow.op_uid.log"
-writefile(log_file,' '.._VERSION..'\r\n','ab+')
+-- writefile(log_file,' '.._VERSION..'\r\n','ab+')
 local result = {}  -- 定义一个table
 local op_uid_split = {} -- op_uid字段: 1008,1098,2505 以','分割后的数组
 local tmp_op_uid = 0

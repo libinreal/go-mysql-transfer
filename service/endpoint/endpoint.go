@@ -227,7 +227,7 @@ func convertNumberColumnData(value interface{}, col *schema.TableColumn, rule *g
 	switch col.Type {
 	case schema.TYPE_ENUM:
 		switch value := value.(type) {
-		case int64, float64:
+		case int64:
 			eNum := int64(value) - 1
 			if eNum < 0 || eNum >= int64(len(col.EnumValues)) {
 				// we insert invalid enum value before, so return empty
@@ -235,6 +235,8 @@ func convertNumberColumnData(value interface{}, col *schema.TableColumn, rule *g
 				return ""
 			}
 			return col.EnumValues[eNum]
+		case float64:
+			return int(value)
 		case string:
 			return value
 		case []byte:
@@ -254,11 +256,13 @@ func convertNumberColumnData(value interface{}, col *schema.TableColumn, rule *g
 		}
 	case schema.TYPE_BIT:
 		switch value := value.(type) {
-		case string, float64:
+		case string:
 			if value == "\x01" {
 				return int64(1)
 			}
 			return int64(0)
+		case float64:
+			return int(value)
 		}
 	case schema.TYPE_STRING:
 		switch value := value.(type) {
@@ -311,12 +315,15 @@ func convertNumberColumnData(value interface{}, col *schema.TableColumn, rule *g
 		return vv
 	case schema.TYPE_NUMBER:
 		switch v := value.(type) {
-		case string, float64:
+		case string:
 			vv, err := strconv.ParseInt(v, 10, 64)
 			if err != nil {
 				logs.Error(err.Error())
 				return nil
 			}
+			return vv
+		case float64:
+			vv := int(v)
 			return vv
 		case []byte:
 			str := string(v)
@@ -414,10 +421,9 @@ func rowMap(req *model.RowRequest, rule *global.Rule, primitive bool) map[string
 }
 
 //recover to int type from float before number field value saved into mongo
-func recoverInt(ls []*model.MongoRespond, rule *global.Rule) map[string]interface{} {
-	kv := make(map[string]interface{}, len(ls))
+func recoverInt(ls []*model.MongoRespond, rule *global.Rule) {
 	for _, resp := range ls {
-		var table := resp.Table
+		var table = resp.Table
 		for k, v := range resp.Table {
 			padding, ok := rule.PaddingMap[k]
 			if ok {

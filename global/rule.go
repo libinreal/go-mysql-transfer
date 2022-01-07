@@ -410,11 +410,13 @@ func (s *Rule) buildPaddingMap() error {
 	s.PaddingMap = paddingMap
 
 	//lua padding map init
+	var luaDataField []string
+	var luaDataFieldsType []string
 	if s.LuaDataFields != "" {
-		luaDataField := strings.Split(s.LuaDataFields, ",")
+		luaDataField = strings.Split(s.LuaDataFields, ",")
 	}
 	if s.LuaDataFieldsType != "" {
-		luaDataFieldsType := strings.Split(s.LuaDataFieldsType, ",")
+		luaDataFieldsType = strings.Split(s.LuaDataFieldsType, ",")
 	}
 	
 	if len(luaDataField) > 0 {
@@ -423,9 +425,9 @@ func (s *Rule) buildPaddingMap() error {
 			var column *schema.TableColumn
 			if nil == err {
 				switch t {
-				case schema.TYPE_NUMBER 
+				case schema.TYPE_NUMBER:
 					column = &schema.TableColumn{
-						Type: schema.TYPE_NUMBER
+						Type: schema.TYPE_NUMBER,
 					}
 				//TODO other lua data field type cases using schema types
 				default:
@@ -462,13 +464,6 @@ func (s *Rule) newPadding(mappings map[string]string, columnName string) *model.
 		ColumnName:     column.Name,
 		ColumnType:     column.Type,
 		ColumnMetadata: column,
-	}
-}
-
-func (s *Rule) newLuaPadding(mappings map[string]string, columnName string) *model.Padding {
-	return &model.Padding{
-		ColumnName:     column.Name,
-		ColumnType:     column.Type,
 	}
 }
 
