@@ -12,7 +12,7 @@ flavor: mysql #mysql or mariadb,默认mysql
 level: debug #日志级别；支持：debug|info|warn|error，默认info
 
 #maxprocs: 50 #并发协（线）程数量，默认为: CPU核数*2；一般情况下不需要设置此项
-#bulk_size: 1000 #每批处理数量，不写默认100，可以根据带宽、机器性能等调整;如果是全量数据初始化时redis建议设为1000，其他接收端酌情调大
+bulk_size: 50 #每批处理数量，不写默认100，可以根据带宽、机器性能等调整;如果是全量数据初始化时redis建议设为1000，其他接收端酌情调大
 
 #prometheus相关配置
 #enable_exporter: true #是否启用prometheus exporter，默认false
@@ -71,7 +71,7 @@ mongodb_password: 123456 #mongodb密码，默认为空
 #规则配置
 rule:
   -
-    schema: oms_test #数据库名称
+    schema: oms_dev #数据库名称
     table: order_worksheet #表名称
     #order_by_column: id #排序字段，存量数据同步时不能为空
     #column_lower_case:false #列名称转为小写,默认为false
@@ -84,10 +84,10 @@ rule:
     #default_column_values: area_name=合肥  #默认的列-值，多个用逗号分隔，如：source=binlog,area_name=合肥
     #date_formatter: yyyy-MM-dd #date类型格式化， 不填写默认yyyy-MM-dd
     #datetime_formatter: yyyy-MM-dd HH:mm:ss #datetime、timestamp类型格式化，不填写默认yyyy-MM-dd HH:mm:ss
-    lua_file_path: "E:\\goworkspace\\my-go-mysql-trans\\lua\\order_worksheet.lua"   #lua脚本文件
+    lua_file_path: "E:\\goworkspace\\my-go-mysql-trans\\lua\\main.lua"   #lua脚本文件
     #lua_script:   #lua 脚本
-    lua_data_fields: "op_uid,to_status"
-    lua_data_fields_type: "1,1" # 使用1,2,3,4,5 表示 number|float|enum|set|string 参考 siddontang/go-mysql/schema
+    lua_data_fields: "_id,op_uid,to_status"
+    lua_data_fields_type: "1,1,1" # 使用1,2,3,4,5 表示 number|float|enum|set|string 参考 siddontang/go-mysql/schema
     value_encoder: json  #值编码，支持json、kv-commas、v-commas；默认为json
     #value_formatter: '{{.ID}}|{{.USER_NAME}}' # 值格式化表达式，如：{{.ID}}|{{.USER_NAME}},{{.ID}}表示ID字段的值、{{.USER_NAME}}表示USER_NAME字段的值
 

@@ -1,6 +1,6 @@
 local module = {}
 -- 写入文件
-function module.writefile(path, content, mode)
+function module.Writefile(path, content, mode)
       mode = mode or "w+b"
       local file = io.open(path, mode)
       if file then
