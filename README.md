@@ -2,11 +2,11 @@
 
 # 简介
 
-Fork 自 [go-mysql-transfer](github.com/wj596/go-mysql-transfer) Tag 1.0.4
+Fork 自 [go-mysql-transfer](https://github.com/wj596/go-mysql-transfer) Tag 1.0.4
 
 # 感谢
 
-* [go-mysql-transfer](github.com/wj596/go-mysql-transfer)
+* [go-mysql-transfer](https://github.com/wj596/go-mysql-transfer)
 
 
 
