@@ -81,7 +81,7 @@ func main() {
 	//cfgPath = "D:\\transfer\\redis_release_test_rule.yml"
 
 	//cfgPath = "D:\\transfer\\mongo_release_test_rule.yml"
-	cfgPath = "E:\\goworkspace\\my-go-mysql-trans\\app.order_worksheet.local.yml"
+	// cfgPath = "E:\\goworkspace\\my-go-mysql-trans\\app.order_worksheet.local.yml"
 
 	flag.Parse()
 	if helpFlag {
